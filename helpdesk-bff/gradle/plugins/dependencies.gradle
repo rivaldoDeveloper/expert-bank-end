@@ -45,16 +45,16 @@ dependencies {
         because('Starter para integração com o Spring Cloud OpenFeign')
     }
 
-    implementation('io.github.openfeign:feign-okhttp:13.2.1') {
-        because('Biblioteca para integração com o Feign')
-    }
-
     implementation('com.fasterxml.jackson.datatype:jackson-datatype-jsr310') {
         because('Biblioteca para serialização de datas do Java 8')
     }
 
     implementation('org.springframework.boot:spring-boot-starter-amqp') {
         because('Starter para integração com o RabbitMQ')
+    }
+
+    implementation('io.github.openfeign:feign-okhttp:13.2.1') {
+        because('Biblioteca para integração com o Feign')
     }
 
     implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
