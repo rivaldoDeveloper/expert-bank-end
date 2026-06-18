@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 public class HelpdeskBffApplication {
 
 	public static void main(String[] args) {
+        System.setProperty("spring.application.name", "helpdesk-bff");
 		SpringApplication.run(HelpdeskBffApplication.class, args);
 	}
 

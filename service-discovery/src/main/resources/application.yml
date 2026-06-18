@@ -2,7 +2,7 @@ spring:
   application:
     name: service-discovery
   profiles:
-    active: ${PROFILE_ACTIVE}
+    active: ${PROFILE_ACTIVE:dev}
   output:
     ansi:
       enabled: ALWAYS
@@ -11,10 +11,6 @@ spring:
       hibernate:
         jdbc:
           time_zone: America/Sao_Paulo
-  cloud:
-    config:
-      enabled: false
-
 eureka:
   client:
     register-with-eureka: false

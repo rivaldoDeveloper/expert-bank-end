@@ -11,6 +11,7 @@ ext {
 dependencies {
     implementation('br.com.rivaldo:hd-commons-lib:1.0.0') {
         because('Biblioteca de classes em comum entre os componentes do projeto')
+        exclude group: '*', module: '*'
     }
 
     implementation('org.springframework.boot:spring-boot-starter-web') {

@@ -35,17 +35,43 @@ services:
   # 2. ESTE SÓ SOBE QUANDO O DISCOVERY ESTIVER PRONTO (HEALTHY)
   config-server:
     image: rivald/backend-expert-configs
-    container_name: config-server
+    container_name: 'config-server'
+    build:
+      context: 'config-server'
+      dockerfile: Dockerfile
     environment:
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/rivaldoDeveloper/backend-expert-configs
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=rivaldoDeveloper
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https:link_github_config
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=USER
       - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=PASSWORD
       - SERVER_PORT=8888
-      - PROFILE_ACTIVE=default
+      - PROFILE_ACTIVE=dev
+      - EUREKA_URI=http://service-discovery:8761/eureka
       # Avisamos ao Config Server onde o Eureka está na rede Docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
     ports:
       - "8888:8888"
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - helpdesk
+
+  api-gateway:
+    image: rivaldo/helpdesk-api-gateway
+    container_name: 'api-gateway'
+    build:
+      context: 'api-gateway'
+      dockerfile: Dockerfile
+    environment:
+      - SERVER_PORT=8765
+      - EUREKA_URI=http://service-discovery:8761/eureka
+      - PROFILE_ACTIVE=dev
+      # CORREÇÃO: Faz o Gateway buscar as configurações usando o nome do contêiner Docker na rede interna, não localhost
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    ports:
+      - "8765:8765"
+    expose:
+      - 8765
     depends_on:
       service-discovery:
         condition: service_healthy
