@@ -37,8 +37,8 @@ dependencies {
         because('Starter para validação de dados com o Spring Validation')
     }
 
-    implementation('mysql:mysql-connector-java:8.0.32') {
-        because('Driver JDBC para conexão com o MySQL')
+    implementation('org.postgresql:postgresql:42.7.2') {
+        because('Driver JDBC para conexão com o PostgreSQL')
     }
 
     implementation('br.com.rivaldo:hd-commons-lib:1.0.0') {
