@@ -49,6 +49,10 @@ dependencies {
         because('Starter para integração com o Spring Cloud OpenFeign')
     }
 
+    implementation ('org.springframework.boot:spring-boot-actuator') {
+        because('Starter para monitoramento e gerenciamento de aplicações Spring Boot')
+    }
+
     runtimeOnly('com.h2database:h2') {
         because('Banco de dados H2 para testes em memória')
     }

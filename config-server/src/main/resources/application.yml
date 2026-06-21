@@ -27,6 +27,6 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_URI:http://service-discovery:8761/eureka}
+      defaultZone: ${EUREKA_URI}
 server:
   port: ${SERVER_PORT:8888}

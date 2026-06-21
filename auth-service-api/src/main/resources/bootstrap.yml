@@ -1,8 +1,4 @@
 spring:
-  cloud:
-    config:
-      name: auth-service-api
-      uri: ${CONFIG_SERVER_URI:config-server}
-      fail-fast: true
-  profiles:
-    active: ${PROFILE_ACTIVE}
+  output:
+    ansi:
+      enabled: ALWAYS

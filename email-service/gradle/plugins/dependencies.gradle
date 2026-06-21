@@ -35,10 +35,10 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
 
     // Starter para integração com o Eureka Server
-   // implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-    // Swagger - Gerador de documentação
-  //  implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // Actuator - Monitoramento e gereciamento de aplicações Spring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.3.3'
 
     // Starter para testes unitários com o Spring Boot
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

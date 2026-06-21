@@ -1,10 +1,17 @@
+version: "3.8"
+
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - /.docker-conf/rabbitmq/log/:/var/log/rabbitmq/
     networks:
       - helpdesk
 
@@ -14,42 +21,35 @@ services:
     build:
       context: ./service-discovery
       dockerfile: Dockerfile
-    environment:
-      - SPRING_APPLICATION_NAME=service-discovery
-      - SERVER_PORT=8761
-      - PROFILE_ACTIVE=default
-      # ISSO AQUI RESOLVE O SEU ERRO: Desativa a busca pelo Config Server
-      # para que o Eureka suba usando apenas o seu application.yml local.
-      - SPRING_CLOUD_CONFIG_ENABLED=false
     ports:
       - "8761:8761"
+    expose:
+      - 8761
     # O Docker monitora quando o Java do Eureka realmente ligou
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 3
     networks:
       - helpdesk
-      
+
   # 2. ESTE SÓ SOBE QUANDO O DISCOVERY ESTIVER PRONTO (HEALTHY)
   config-server:
-    image: rivald/backend-expert-configs
     container_name: 'config-server'
     build:
-      context: 'config-server'
+      context: ./config-server
       dockerfile: Dockerfile
     environment:
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https:link_github_config
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=USER
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=CONFIG_GIT_HUB
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=USERNAME
       - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=PASSWORD
-      - SERVER_PORT=8888
-      - PROFILE_ACTIVE=dev
       - EUREKA_URI=http://service-discovery:8761/eureka
-      # Avisamos ao Config Server onde o Eureka está na rede Docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    ports:
-      - "8888:8888"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://config-server:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     depends_on:
       service-discovery:
         condition: service_healthy
@@ -57,23 +57,127 @@ services:
       - helpdesk
 
   api-gateway:
-    image: rivaldo/helpdesk-api-gateway
     container_name: 'api-gateway'
     build:
-      context: 'api-gateway'
+      context: ./api-gateway
       dockerfile: Dockerfile
     environment:
-      - SERVER_PORT=8765
       - EUREKA_URI=http://service-discovery:8761/eureka
+      - CONFIG_SERVER_URI=http://config-server:8888
       - PROFILE_ACTIVE=dev
-      # CORREÇÃO: Faz o Gateway buscar as configurações usando o nome do contêiner Docker na rede interna, não localhost
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
     ports:
       - "8765:8765"
     expose:
       - 8765
     depends_on:
       service-discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - helpdesk
+
+  auth-service-api:
+    container_name: 'auth-service-api'
+    build:
+      context: ./auth-service-api
+      dockerfile: Dockerfile
+
+    environment:
+      - SERVER_PORT=8082
+      - PROFILE_ACTIVE=dev
+      - EUREKA_URI=http://service-discovery:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_URI=http://config-server:8888
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - "8082:8082"
+    expose:
+      - 8082
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - helpdesk
+
+  email-service:
+    container_name: 'email-service'
+    build:
+      context: ./email-service
+      dockerfile: Dockerfile
+    environment:
+      - PROFILE_ACTIVE=dev
+      - SPRING_APPLICATION_NAME=email-service
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_ADDRESSES=rabbitmq
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - EUREKA_URI=http://service-discovery:8761/eureka
+      - CONFIG_SERVER_URI=http://config-server:8888
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - helpdesk
+
+  user-service-api:
+    container_name: 'user-service-api'
+    build:
+      context: ./user-service-api
+      dockerfile: Dockerfile
+    environment:
+      - PROFILE_ACTIVE=dev
+      - EUREKA_URI=http://service-discovery:8761/eureka
+      - CONFIG_SERVER_URI=http://config-server:8888
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    ports:
+      - "8088:8088"
+    expose:
+      - 8088
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - helpdesk
+
+  order-service-api:
+    container_name: 'order-service-api'
+    build:
+      context: ./order-service-api
+      dockerfile: Dockerfile
+    environment:
+      - PROFILE_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=dev
+
+      # AS TRÊS VARIÁVEIS OFICIAIS DO SPRING BOOT 3 PARA FORÇAR O CONFIG SERVER:
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - CONFIG_SERVER_URI=http://config-server:8888
+
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_CONNECTION_TIMEOUT=10000
+      - EUREKA_URI=http://service-discovery:8761/eureka
+    ports:
+      - "8100:8100"
+    expose:
+      - 8100
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - helpdesk

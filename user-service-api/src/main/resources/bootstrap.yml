@@ -1,9 +1,17 @@
 spring:
   application:
     name: user-service-api
+  output:
+    ansi:
+      enabled: Always
   profiles:
     active: ${PROFILE_ACTIVE:dev}
   cloud:
     config:
       name: user-service-api
       uri: ${CONFIG_SERVER_URI:config-server}
+springdoc:
+  openapi:
+    title: User Service API
+    description: API for User Service
+    version: 1.0.0

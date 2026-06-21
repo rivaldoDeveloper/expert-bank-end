@@ -1,0 +1,3 @@
+output:
+  ansi:
+    enabled: ALWAYS

@@ -33,7 +33,7 @@ public class RefreshTokenService {
                 RefreshToken.builder()
                         .id(UUID.randomUUID().toString())
                         .createdAt(now())
-                        .expiresAt(now().plusSeconds(refreshTokenExpirationSec))
+                        .expiresAt(now().plusHours(refreshTokenExpirationSec))
                         .username(username)
                         .build()
         );

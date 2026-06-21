@@ -33,6 +33,9 @@ dependencies {
     // Starter para geração de documentação OpenAPI com Springdoc
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
+    // Actuator - Monitoramento e gereciamento de aplicações Spring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.3.3'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
