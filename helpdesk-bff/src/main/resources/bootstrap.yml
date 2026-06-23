@@ -3,14 +3,26 @@ spring:
     name: helpdesk-bff
   cloud:
     config:
-      uri: 'config-server'
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
       allow-override: true
       override-none: true
+      fail-fast: false
   output:
     ansi:
       enabled: ALWAYS
   repository:
     include: false
+
+# CONFIGURAÇÕES DE FALLBACK PARA AMBIENTE LOCAL SEM CONFIG SERVER:
+jwt:
+  secret: "9e2d7013da726846dc716cd91f91abdc47e22a0d3078bbd4f76345387a1d80ee"
+
+springdoc:
+  openapi:
+    title: "Help Desk BFF API"
+    description: "Gateway de Microsserviços do Help Desk"
+    version: "1.0.0"
+
 eureka:
   client:
     service-url:

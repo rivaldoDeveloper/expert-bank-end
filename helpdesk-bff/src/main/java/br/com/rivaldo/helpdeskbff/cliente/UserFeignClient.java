@@ -1,5 +1,6 @@
 package br.com.rivaldo.helpdeskbff.cliente;
 
+import br.com.rivaldo.helpdeskbff.config.FeignConfig;
 import br.com.rivaldo.models.requests.CreateUserRequest;
 import br.com.rivaldo.models.requests.UpdateUserRequest;
 import br.com.rivaldo.models.responses.UserResponse;
@@ -12,7 +13,9 @@ import java.util.List;
 
 @FeignClient(
         name = "user-service-api",
-        path = "/api/users"
+        path = "/api/users",
+        url = "http://localhost:8088",
+        configuration = FeignConfig.class
 )
 public interface UserFeignClient {
 

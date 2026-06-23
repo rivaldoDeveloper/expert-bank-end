@@ -1,5 +1,6 @@
 package br.com.rivaldo.helpdeskbff.cliente;
 
+import br.com.rivaldo.helpdeskbff.config.FeignConfig;
 import br.com.rivaldo.models.requests.CreateOrderRequest;
 import br.com.rivaldo.models.requests.UpdateOrderRequest;
 import br.com.rivaldo.models.responses.OrderResponse;
@@ -15,7 +16,9 @@ import java.util.List;
 
 @FeignClient(
         name = "order-service-api",
-        path = "/api/orders"
+        path = "/api/orders",
+        url = "http://localhost:8100",
+        configuration = FeignConfig.class
 )
 public interface OrderFeignClient {
 

@@ -1,5 +1,6 @@
 package br.com.rivaldo.helpdeskbff.cliente;
 
+import br.com.rivaldo.helpdeskbff.config.FeignConfig;
 import br.com.rivaldo.models.requests.AuthenticateRequest;
 import br.com.rivaldo.models.requests.RefreshTokenRequest;
 import br.com.rivaldo.models.responses.AuthenticationResponse;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "auth-service-api",
-        path = "/api/auth"
+        path = "/api/auth",
+        url = "http://localhost:8082",
+        configuration = FeignConfig.class
 )
 public interface AuthFeignClient {
     @PostMapping("/login")
