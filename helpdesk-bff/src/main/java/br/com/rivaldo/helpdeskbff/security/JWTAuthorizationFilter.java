@@ -5,13 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.jsonwebtoken.Claims;
-
-// GARANTA QUE ESSES IMPORTS ESTEJAM AQUI:
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,25 +36,28 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if(isPublicRoute(request.getRequestURI())) {
+        // AJUSTADO: Passa o request completo para avaliar a rota E o método HTTP de forma inteligente
+        if (isPublicRoute(request)) {
             chain.doFilter(request, response);
             return;
         }
 
         final String authHeader = request.getHeader(AUTHORIZATION);
-        if (authHeader == null) {
-            handleException(request.getRequestURI(), "Authorization header is missing", response);
+
+        // Se não houver token Bearer, delega para a cadeia do Spring Security decidir nas rotas privadas
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
             return;
         }
 
-        if (authHeader.startsWith("Bearer ")) {
-            try {
-                UsernamePasswordAuthenticationToken auth = getAuthentication(request);
-                if (auth != null) SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception e) {
-                handleException(request.getRequestURI(), e.getMessage(), response);
-                return;
+        try {
+            UsernamePasswordAuthenticationToken auth = getAuthentication(request);
+            if (auth != null) {
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
+        } catch (Exception e) {
+            handleException(request.getRequestURI(), e.getMessage(), response);
+            return;
         }
 
         chain.doFilter(request, response);
@@ -82,20 +82,48 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         response.getWriter().write(json);
     }
 
-    private boolean isPublicRoute(String uri) {
-        for(String route : this.publicRoutes) {
-            if(uri.startsWith(route)) return true;
+    // AJUSTADO: Método robusto para diferenciar requisições públicas de privadas por Método HTTP
+    private boolean isPublicRoute(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        // Rota de usuários SÓ é pública se for criação de conta (POST)
+        if (uri.startsWith("/api/users") && method.equalsIgnoreCase("POST")) {
+            return true;
+        }
+
+        // Para as demais constantes configuradas no SecurityConfig (Logins, Swagger, etc.)
+        for (String route : this.publicRoutes) {
+            // Ignora o mapeamento genérico do array se bater com a rota de usuários por outro método (ex: GET)
+            if (route.equals("/api/users")) {
+                continue;
+            }
+            if (uri.startsWith(route)) {
+                return true;
+            }
         }
         return false;
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        final String token = request.getHeader(AUTHORIZATION).substring(7);
+        String header = request.getHeader(AUTHORIZATION);
+        if (header == null || !header.startsWith("Bearer ")) {
+            return null;
+        }
 
-        String username = jwtUtil.getUsername(token);
+        // Remove espaços em branco indesejados nas pontas do token
+        final String token = header.substring(7).trim();
+
+        // Lê os claims uma ÚNICA vez para não estourar o buffer de leitura do JJWT
         Claims claims = jwtUtil.getClaims(token);
-        List<GrantedAuthority> authorities = jwtUtil.getAuthorities(claims);
+        if (claims != null) {
+            String username = claims.getSubject();
+            List<GrantedAuthority> authorities = jwtUtil.getAuthorities(claims);
 
-        return username != null ? new UsernamePasswordAuthenticationToken(username, null, authorities) : null;
+            if (username != null) {
+                return new UsernamePasswordAuthenticationToken(username, null, authorities);
+            }
+        }
+        return null;
     }
 }

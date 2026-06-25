@@ -4,9 +4,7 @@ import br.com.rivaldo.helpdeskbff.config.FeignConfig;
 import br.com.rivaldo.models.requests.CreateOrderRequest;
 import br.com.rivaldo.models.requests.UpdateOrderRequest;
 import br.com.rivaldo.models.responses.OrderResponse;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +15,13 @@ import java.util.List;
 @FeignClient(
         name = "order-service-api",
         path = "/api/orders",
-        url = "http://localhost:8100",
+        url = "${ORDER_SERVICE_URL:http://order-service-api:8100}",
         configuration = FeignConfig.class
 )
 public interface OrderFeignClient {
 
     @GetMapping("/{id}")
-    ResponseEntity<OrderResponse> findById(
-            @PathVariable(name = "id") final Long id);
+    ResponseEntity<OrderResponse> findById(@PathVariable(name = "id") final Long id);
 
     @GetMapping
     ResponseEntity<List<OrderResponse>> findAll();
@@ -39,8 +36,7 @@ public interface OrderFeignClient {
     );
 
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> deleteById(
-            @PathVariable(name = "id") final Long id);
+    ResponseEntity<Void> deleteById(@PathVariable(name = "id") final Long id);
 
     @GetMapping("/pages")
     ResponseEntity<Page<OrderResponse>> findAllPaged(

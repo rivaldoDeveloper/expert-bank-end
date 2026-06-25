@@ -181,7 +181,50 @@ services:
         condition: service_healthy
     networks:
       - helpdesk
+        
+  redis:
+    container_name: 'redis'
+    image: redis:latest
+    healthcheck:
+      test: redis-cli ping
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - helpdesk
+
+  helpdesk-bff:
+    container_name: 'helpdesk-bff'
+    build:
+      context: ./helpdesk-bff
+      dockerfile: Dockerfile
+    environment:
+      - PROFILE_ACTIVE=dev
+      - EUREKA_URI=http://service-discovery:8761/eureka
+      - CONFIG_SERVER_URI=http://config-server:8888
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    networks:
+      - helpdesk
 
 networks:
   helpdesk:
     driver: bridge
+
+volumes:
+  redis_data:
+    driver: local

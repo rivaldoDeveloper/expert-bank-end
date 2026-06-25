@@ -5,6 +5,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.3.3'
     implementation 'br.com.rivaldo:hd-commons-lib:1.0.0'
 
     implementation('org.springframework.boot:spring-boot-starter-web') {

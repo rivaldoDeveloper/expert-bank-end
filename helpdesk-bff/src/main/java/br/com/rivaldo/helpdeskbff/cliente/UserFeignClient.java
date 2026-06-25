@@ -14,7 +14,7 @@ import java.util.List;
 @FeignClient(
         name = "user-service-api",
         path = "/api/users",
-        url = "http://localhost:8088",
+        url = "${USER_SERVICE_URL:http://user-service-api:8088}",
         configuration = FeignConfig.class
 )
 public interface UserFeignClient {

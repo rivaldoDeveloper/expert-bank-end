@@ -18,20 +18,24 @@ public class OpenAPIConfig {
             @Value("${springdoc.openapi.description}") final String description,
             @Value("${springdoc.openapi.version}") final String version
     ) {
+        final String securitySchemeName = "bearerAuth";
+
         return new OpenAPI()
                 .info(new Info()
                         .title(title)
                         .description(description)
                         .version(version)
                 )
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-                .components(new Components().addSecuritySchemes("bearerAuth",
+                // Vincula a segurança globalmente para todos os controllers da tela do BFF
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
+                                        .type(SecurityScheme.Type.HTTP) // Define que é uma segurança HTTP
+                                        .scheme("bearer")               // Força o Swagger a colocar a palavra "Bearer " automaticamente
+                                        .bearerFormat("JWT")            // Especifica o formato do Token
+                                        .description("Insira APENAS o código puro do token gerado no login (sem a palavra Bearer na frente)")
                         )
                 );
     }
-
 }
