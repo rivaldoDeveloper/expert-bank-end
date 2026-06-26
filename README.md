@@ -33,8 +33,8 @@ O diagrama abaixo ilustra o fluxo de requisições, descoberta de serviços, lei
 
 ```mermaid
 graph TD
-    Client["Client / Frontend"] -->|Chamadas via BFF (Port 8080)| BFF["helpdesk-bff (Port 8080)"]
-    Client -->|Rotas do Gateway (Port 8765)| Gateway["api-gateway (Port 8765)"]
+    Client["Client / Frontend"] -->|Chamadas via BFF - Porta 8080| BFF["helpdesk-bff (Port 8080)"]
+    Client -->|Rotas do Gateway - Porta 8765| Gateway["api-gateway (Port 8765)"]
     
     subgraph Core Services
         BFF -->|OpenFeign| Auth["auth-service-api (Port 8082)"]
