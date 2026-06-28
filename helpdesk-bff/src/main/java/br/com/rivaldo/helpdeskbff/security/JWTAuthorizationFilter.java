@@ -107,14 +107,27 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String header = request.getHeader(AUTHORIZATION);
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header == null) {
             return null;
         }
 
-        // Remove espaços em branco indesejados nas pontas do token
-        final String token = header.substring(7).trim();
+        // 1. Limpa espaços nas pontas do cabeçalho
+        String token = header.trim();
 
-        // Lê os claims uma ÚNICA vez para não estourar o buffer de leitura do JJWT
+        // 2. Remove o primeiro "Bearer "
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+
+        // 3. CORREÇÃO CRUCIAL: Se o Swagger duplicou e enviou "Bearer Bearer ...", remove o segundo!
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+
+        // 4. Remove aspas residuais que o Swagger UI às vezes joga no cache local
+        token = token.replace("\"", "");
+
+        // Faz o parse seguro com a string do token perfeitamente limpa
         Claims claims = jwtUtil.getClaims(token);
         if (claims != null) {
             String username = claims.getSubject();
